@@ -1,9 +1,9 @@
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from scipy import datasets
+from scipy import datasets as misc
 
-img = datasets.face()
+img = misc.face()
 
 def main():
     plt.imshow(img)
