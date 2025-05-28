@@ -33,7 +33,6 @@ dist/
 *.egg-info/
 
 # Arquivos de imagens e datasets (opcional, se forem gerados automaticamente ou baixados)
-*.png
 *.jpg
 *.jpeg
 *.bmp
