@@ -10,4 +10,6 @@ data = [
 
 df = pd.DataFrame(data)
 
+df['TORCEDORES'] = df['TORCEDORES'].astype(float)
+
 print(df.dtypes)
