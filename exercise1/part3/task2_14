@@ -24,7 +24,5 @@ df['DATA'] = dates
 
 df = df.rename(columns={'TORCEDORES': 'Nº TORCEDORES', 'DATA': 'DATA - CRIAÇÃO'})
 
-countries_to_find = ['Alemanha', 'Brasil']
-filtered_teams = df[df['PAÍS'].isin(countries_to_find)]
-
-print(filtered_teams[['TIME', 'PAÍS']])
+first_two_columns = df.iloc[:, 0:2]
+print(first_two_columns)
