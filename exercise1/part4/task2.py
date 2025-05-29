@@ -3,6 +3,7 @@ import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler, OneHotEncoder
+from sklearn.model_selection import train_test_split
 
 # Carregar o dataset
 penguins = sns.load_dataset("penguins")
@@ -40,7 +41,7 @@ penguins_encoded[numeric_cols] = scaler.fit_transform(penguins_encoded[numeric_c
 
 penguins_encoded.to_csv('penguins_normalized.csv', index=False)
 
-# 4. SEPARAR O DATASET E X (FEATURES) E Y (TARGET)
+# 4. SEPARAR O DATASET EM X (FEATURES) E Y (TARGET)
 # Usando a coluna 'species' como target
 y_species = penguins['species']  # Guardamos a coluna target original
 
@@ -51,12 +52,27 @@ X = penguins_encoded.drop(columns=[
     'species_Adelie', 'species_Chinstrap', 'species_Gentoo'  # Colunas one-hot da target
 ])
 
-# Verificando as dimensões
-print(f"\nDimensões de X (features): {X.shape}")
-print(f"Dimensões de y (target): {y_species.shape}")
+# 5. DIVIDIR OS DADOS EM CONJUNTOS DE TREINAMENTO E TESTE
+# Definindo a proporção: 80% para treino e 20% para teste
+test_size = 0.2  # 20% para teste (80% para treino)
 
-# Visualizar as primeiras linhas
-print("\nPrimeiras linhas de X (features):")
-print(X.head())
-print("\nPrimeiras linhas de y (target):")
-print(y_species.head())
+# Dividindo os dados mantendo a proporção das classes (stratify)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y_species, 
+    test_size=test_size,
+    random_state=42,  # Para reprodutibilidade
+    stratify=y_species  # Mantém a mesma proporção de cada espécie nos conjuntos
+)
+
+# Verificando as dimensões dos conjuntos de treino e teste
+print("\nConjuntos de Treino e Teste:")
+print(f"X_train: {X_train.shape} ({100-test_size*100:.0f}% dos dados)")
+print(f"X_test: {X_test.shape} ({test_size*100:.0f}% dos dados)")
+print(f"y_train: {y_train.shape} ({100-test_size*100:.0f}% dos dados)")
+print(f"y_test: {y_test.shape} ({test_size*100:.0f}% dos dados)")
+
+# Verificando a distribuição das classes (espécies) nos conjuntos
+print("\nDistribuição das espécies:")
+print(f"Dataset completo:\n{y_species.value_counts()}")
+print(f"Conjunto de treino:\n{y_train.value_counts()}")
+print(f"Conjunto de teste:\n{y_test.value_counts()}")
