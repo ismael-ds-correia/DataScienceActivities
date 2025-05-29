@@ -10,3 +10,7 @@ penguins = sns.load_dataset("penguins")
 # Verificar a estrutura do dataset
 print("Informações do dataset:")
 print(penguins.info())
+
+# Verificar estatísticas descritivas
+print("\nEstatísticas descritivas:")
+print(penguins.describe())
