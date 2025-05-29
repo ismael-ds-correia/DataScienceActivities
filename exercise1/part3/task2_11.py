@@ -24,4 +24,4 @@ df['DATA'] = dates
 
 df = df.rename(columns={'TORCEDORES': 'Nº TORCEDORES', 'DATA': 'DATA - CRIAÇÃO'})
 
-print(df)
+print(df[['TIME', 'PAÍS']])
