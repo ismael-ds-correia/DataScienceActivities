@@ -25,4 +25,5 @@ df['DATA'] = dates
 df = df.rename(columns={'TORCEDORES': 'Nº TORCEDORES', 'DATA': 'DATA - CRIAÇÃO'})
 
 first_two_columns = df.iloc[:, 0:2]
+
 print(first_two_columns)
