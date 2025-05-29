@@ -12,7 +12,7 @@ data2 = {
     'TORCEDORES': [1920613, 1678943]
 }
 
-teams_df2 = pd.DataFrame(data2)
+teams_df2 = pd.DataFrame(data2, index=[4, 5])
 
 print(teams_df1)
 print(teams_df2)
