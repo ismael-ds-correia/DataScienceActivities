@@ -28,8 +28,6 @@ penguins_encoded = pd.get_dummies(penguins, columns=['species', 'island'], drop_
 
 # print(penguins_encoded.head())
 
-penguins_encoded.to_csv('penguins_treated.csv', index=False)
-
 # 3. NORMALIZAÇÃO DAS COLUNAS NUMÉRICAS (valores entre 0 e 1)
 
 # Inicializando o MinMaxScaler
@@ -41,3 +39,24 @@ penguins_encoded[numeric_cols] = scaler.fit_transform(penguins_encoded[numeric_c
 # print(penguins_encoded[numeric_cols].head())
 
 penguins_encoded.to_csv('penguins_normalized.csv', index=False)
+
+# 4. SEPARAR O DATASET E X (FEATURES) E Y (TARGET)
+# Usando a coluna 'species' como target
+y_species = penguins['species']  # Guardamos a coluna target original
+
+# Criando X: todas as features, excluindo a coluna target original e quaisquer colunas derivadas da target
+# Também removemos colunas que não desejamos como features (como 'sex', pois já temos 'sex_encoded')
+X = penguins_encoded.drop(columns=[
+    'sex',  # Colunas originais que não queremos como features
+    'species_Adelie', 'species_Chinstrap', 'species_Gentoo'  # Colunas one-hot da target
+])
+
+# Verificando as dimensões
+print(f"\nDimensões de X (features): {X.shape}")
+print(f"Dimensões de y (target): {y_species.shape}")
+
+# Visualizar as primeiras linhas
+print("\nPrimeiras linhas de X (features):")
+print(X.head())
+print("\nPrimeiras linhas de y (target):")
+print(y_species.head())
