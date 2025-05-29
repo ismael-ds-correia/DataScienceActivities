@@ -11,13 +11,19 @@ penguins = sns.load_dataset("penguins")
 # Para colunas numéricas: preenchendo com a mediana.
 numeric_cols = ['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'body_mass_g']
 for col in numeric_cols:
-    penguins[col].fillna(penguins[col].median(), inplace=True)
+    penguins.loc[:, col] = penguins[col].fillna(penguins[col].median())
 
 # Para colunas categóricas: preenchendo com o a moda.
 categorical_cols = ['species', 'island', 'sex']
 for col in categorical_cols:
-    penguins[col].fillna(penguins[col].mode()[0], inplace=True)
+    penguins.loc[:, col] = penguins[col].fillna(penguins[col].mode())
 
-# Verificar se ainda existem valores nulos
-print("\nValores nulos após tratamento:")
-print(penguins.isnull().sum())
+# 2. TRATAMENTO DE VALORES CATEGÓRICOS
+# Método 1: Label Encoding (para colunas ordinais ou binárias)
+label_encoder = LabelEncoder()
+penguins['sex_encoded'] = label_encoder.fit_transform(penguins['sex'])
+
+# Método 2: One-Hot Encoding (para categorias sem ordem inerente)
+penguins_encoded = pd.get_dummies(penguins, columns=['species', 'island'], drop_first=False)
+
+print(penguins_encoded.head())
