@@ -7,14 +7,8 @@ from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 # Carregar o dataset
 penguins = sns.load_dataset("penguins")
 
-# Verificar a estrutura do dataset
-print("Informações do dataset:")
-print(penguins.info())
-
-# Verificar estatísticas descritivas
-print("\nEstatísticas descritivas:")
-print(penguins.describe())
-
-# Verificar valores nulos
-print("\nValores nulos por coluna:")
-print(penguins.isnull().sum())
+# 1. TRATAMENTO DE VALORES NULOS
+# Para colunas numéricas: preenchendo com a mediana,
+numeric_cols = ['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'body_mass_g']
+for col in numeric_cols:
+    penguins[col].fillna(penguins[col].median(), inplace=True)
