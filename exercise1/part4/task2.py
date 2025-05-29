@@ -26,4 +26,6 @@ penguins['sex_encoded'] = label_encoder.fit_transform(penguins['sex'])
 # Método 2: One-Hot Encoding (para categorias sem ordem inerente)
 penguins_encoded = pd.get_dummies(penguins, columns=['species', 'island'], drop_first=False)
 
-print(penguins_encoded.head())
+# print(penguins_encoded.head())
+
+penguins_encoded.to_csv('penguins_treated.csv', index=False)
