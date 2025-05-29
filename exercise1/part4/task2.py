@@ -14,3 +14,7 @@ print(penguins.info())
 # Verificar estatísticas descritivas
 print("\nEstatísticas descritivas:")
 print(penguins.describe())
+
+# Verificar valores nulos
+print("\nValores nulos por coluna:")
+print(penguins.isnull().sum())
