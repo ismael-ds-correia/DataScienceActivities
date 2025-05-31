@@ -58,3 +58,11 @@ print(result)
 merged = pd.merge(df_usuario, df_cidade, on='pk')
 result = merged.groupby('estado')['idade'].sum().reset_index()
 print(result)
+
+# SQL: SELECT * FROM Usuario ORDER BY idade
+result = df_usuario.sort_values(by='idade')
+print(result.head())
+
+# SQL: SELECT * FROM Usuario LIMIT 3
+result = df_usuario.head(3)
+print(result)
