@@ -48,3 +48,8 @@ print(result.head())
 # SQL: SELECT * FROM Usuário Us INNER JOIN Cidade Ci ON Us.pk = Ci.pk
 result = pd.merge(df_usuario, df_cidade, on='pk')
 print(result.head())
+
+# SQL: SELECT nome, estado, COUNT(*) FROM Cidade GROUP BY estado
+result = df_cidade.groupby('estado').agg({'nome': 'count'}).reset_index()
+result.columns = ['estado', 'contagem']
+print(result)
