@@ -115,3 +115,8 @@ print(result.head())
 estado_counts = df_cidade.groupby('estado').size().reset_index(name='contagem')
 result = estado_counts[estado_counts['contagem'] > 1]
 print(result)
+
+# SQL: SELECT * FROM (SELECT * FROM Usuario WHERE idade > 31) WHERE nome LIKE 'A%'
+subquery = df_usuario[df_usuario['idade'] > 31]
+result = subquery[subquery['nome'].str.startswith('A')]
+print(result)
