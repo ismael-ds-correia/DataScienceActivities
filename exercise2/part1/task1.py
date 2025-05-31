@@ -120,3 +120,7 @@ print(result)
 subquery = df_usuario[df_usuario['idade'] > 31]
 result = subquery[subquery['nome'].str.startswith('A')]
 print(result)
+
+# SQL: SELECT * FROM Usuario WHERE nome LIKE 'a%'
+result = df_usuario[df_usuario['nome'].str.lower().str.startswith('a')]
+print(result)
