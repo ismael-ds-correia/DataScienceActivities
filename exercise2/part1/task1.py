@@ -89,3 +89,7 @@ print(f"Soma das idades dos usuários: {sum_age}")
 # SQL: SELECT * FROM Usuario WHERE idade IN (19,47)
 result = df_usuario[df_usuario['idade'].isin([19, 47])]
 print(result)
+
+# SQL: SELECT * FROM Usuario WHERE idade NOT IN (19,47)
+result = df_usuario[~df_usuario['idade'].isin([19, 47])]
+print(result.head())
