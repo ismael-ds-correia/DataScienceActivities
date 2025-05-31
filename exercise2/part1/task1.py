@@ -132,3 +132,7 @@ print(df_usuario.head())
 # SQL: UPDATE Usuario SET idade = idade + 1 WHERE nome = 'Ana Lis'
 df_usuario.loc[df_usuario['nome'] == 'Ana Lis', 'idade'] += 1
 print(df_usuario[df_usuario['nome'] == 'Ana Lis'])
+
+# SQL: DELETE FROM Usuario WHERE idade < 15
+df_usuario = df_usuario[df_usuario['idade'] >= 15]
+print(f"Número de registros após a exclusão: {len(df_usuario)}")
