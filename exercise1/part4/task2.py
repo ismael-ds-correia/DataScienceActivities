@@ -8,7 +8,6 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from imblearn.over_sampling import SMOTE  # Para balanceamento de classes
 
-# Carregar o dataset
 penguins = sns.load_dataset("penguins")
 
 # 1. TRATAMENTO DE VALORES NULOS
