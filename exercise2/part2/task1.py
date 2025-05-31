@@ -9,6 +9,7 @@ df = pd.DataFrame({
     'D': [5, 4, 9, np.nan, " "]
 })
 
-# Exibir o DataFrame criado
-print("DataFrame original:")
-print(df)
+
+# Exibindo a quantidade de dados ausentes em cada coluna
+print("\nQuantidade de dados ausentes por coluna:")
+print(df.isna().sum())
