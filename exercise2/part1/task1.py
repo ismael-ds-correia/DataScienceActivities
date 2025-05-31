@@ -101,3 +101,12 @@ print(result.head())
 # SQL: SELECT DISTINCT estado FROM Cidade
 result = df_cidade['estado'].unique()
 print(result)
+
+# SQL: SELECT DISTINCT nome, estado FROM Cidade
+result = df_cidade[['nome', 'estado']].drop_duplicates()
+print(result.head())
+
+# SQL: SELECT id, nome, idade, CASE WHEN idade > 18 THEN 'ADULTO' ELSE 'ADOLESCENTE' END AS categoria FROM Usuario
+df_usuario['categoria'] = df_usuario['idade'].apply(lambda x: 'ADULTO' if x > 18 else 'ADOLESCENTE')
+result = df_usuario[['id', 'nome', 'idade', 'categoria']]
+print(result.head())
