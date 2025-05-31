@@ -128,3 +128,7 @@ print(result)
 # SQL: ALTER TABLE Usuario ADD COLUMN sobrenome VARCHAR
 df_usuario['sobrenome'] = None  # Adiciona coluna com valores nulos
 print(df_usuario.head())
+
+# SQL: UPDATE Usuario SET idade = idade + 1 WHERE nome = 'Ana Lis'
+df_usuario.loc[df_usuario['nome'] == 'Ana Lis', 'idade'] += 1
+print(df_usuario[df_usuario['nome'] == 'Ana Lis'])
