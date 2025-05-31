@@ -143,3 +143,19 @@ print(df_usuario.head())
 
 # Revertendo e voltando ao DataFrame original:
 df_usuario.reset_index(inplace=True)
+
+# SQL: SELECT id, nome FROM Usuario UNION SELECT id, nome FROM Cidade
+
+# UNION (equivalente a pd.concat com drop_duplicates)
+union_result = pd.concat([
+    df_usuario[['id', 'nome']],
+    df_cidade[['id', 'nome']]
+]).drop_duplicates()
+print(union_result.head())
+
+# UNION ALL (equivalente a pd.concat sem drop_duplicates)
+union_all_result = pd.concat([
+    df_usuario[['id', 'nome']],
+    df_cidade[['id', 'nome']]
+])
+print(union_all_result.head())
