@@ -53,3 +53,8 @@ print(result.head())
 result = df_cidade.groupby('estado').agg({'nome': 'count'}).reset_index()
 result.columns = ['estado', 'contagem']
 print(result)
+
+# SQL: SELECT estado, SUM(idade) FROM Usuário Us INNER JOIN Cidade Ci ON Us.pk = Ci.pk GROUP BY estado
+merged = pd.merge(df_usuario, df_cidade, on='pk')
+result = merged.groupby('estado')['idade'].sum().reset_index()
+print(result)
