@@ -136,3 +136,10 @@ print(df_usuario[df_usuario['nome'] == 'Ana Lis'])
 # SQL: DELETE FROM Usuario WHERE idade < 15
 df_usuario = df_usuario[df_usuario['idade'] >= 15]
 print(f"Número de registros após a exclusão: {len(df_usuario)}")
+
+# SQL: CREATE INDEX idx_nome ON Usuario (nome)
+df_usuario.set_index('nome', inplace=True)
+print(df_usuario.head())
+
+# Revertendo e voltando ao DataFrame original:
+df_usuario.reset_index(inplace=True)
