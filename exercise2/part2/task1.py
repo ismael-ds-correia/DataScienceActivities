@@ -9,14 +9,14 @@ df = pd.DataFrame({
     'D': [5, 4, 9, np.nan, " "]
 })
 
-
 # Exibindo a quantidade de dados ausentes em cada coluna
-print("\nQuantidade de dados ausentes por coluna:")
 print(df.isna().sum())
 
 # Remover linhas com qualquer valor ausente (how='any' é o padrão)
 df_sem_na = df.dropna()
-
-# Exibir o DataFrame após remoção das linhas
-print("\nDataFrame após remover linhas com qualquer valor ausente:")
 print(df_sem_na)
+
+# Removendo apenas linhas onde TODOS os valores são ausentes
+df_all_na = df.dropna(how='all')
+print(df_all_na)
+
