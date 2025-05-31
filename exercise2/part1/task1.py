@@ -93,3 +93,11 @@ print(result)
 # SQL: SELECT * FROM Usuario WHERE idade NOT IN (19,47)
 result = df_usuario[~df_usuario['idade'].isin([19, 47])]
 print(result.head())
+
+# SQL: SELECT * FROM Usuario WHERE idade BETWEEN 23 AND 50
+result = df_usuario[(df_usuario['idade'] >= 23) & (df_usuario['idade'] <= 50)]
+print(result.head())
+
+# SQL: SELECT DISTINCT estado FROM Cidade
+result = df_cidade['estado'].unique()
+print(result)
