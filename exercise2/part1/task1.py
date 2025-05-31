@@ -124,3 +124,7 @@ print(result)
 # SQL: SELECT * FROM Usuario WHERE nome LIKE 'a%'
 result = df_usuario[df_usuario['nome'].str.lower().str.startswith('a')]
 print(result)
+
+# SQL: ALTER TABLE Usuario ADD COLUMN sobrenome VARCHAR
+df_usuario['sobrenome'] = None  # Adiciona coluna com valores nulos
+print(df_usuario.head())
