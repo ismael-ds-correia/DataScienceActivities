@@ -66,3 +66,17 @@ print(result.head())
 # SQL: SELECT * FROM Usuario LIMIT 3
 result = df_usuario.head(3)
 print(result)
+
+# SQL: SELECT * FROM Usuario ORDER BY idade DESC LIMIT 6
+result = df_usuario.sort_values(by='idade', ascending=False).head(6)
+print(result)
+
+# Quantas linhas tem a tabela Usuário e a tabela Cidade? (COUNT)
+# SQL: SELECT COUNT(*) FROM Usuario; SELECT COUNT(*) FROM Cidade
+print(f"Número de registros na tabela Usuario: {len(df_usuario)}")
+print(f"Número de registros na tabela Cidade: {len(df_cidade)}")
+
+# Qual a média das idades dos Usuários? (AVG)
+# SQL: SELECT AVG(idade) FROM Usuario
+mean_age = df_usuario['idade'].mean()
+print(f"Média das idades dos usuários: {mean_age:.2f}")
