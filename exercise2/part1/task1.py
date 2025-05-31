@@ -80,3 +80,12 @@ print(f"Número de registros na tabela Cidade: {len(df_cidade)}")
 # SQL: SELECT AVG(idade) FROM Usuario
 mean_age = df_usuario['idade'].mean()
 print(f"Média das idades dos usuários: {mean_age:.2f}")
+
+# Qual a soma das idades dos Usuários? (SUM)
+# SQL: SELECT SUM(idade) FROM Usuario
+sum_age = df_usuario['idade'].sum()
+print(f"Soma das idades dos usuários: {sum_age}")
+
+# SQL: SELECT * FROM Usuario WHERE idade IN (19,47)
+result = df_usuario[df_usuario['idade'].isin([19, 47])]
+print(result)
