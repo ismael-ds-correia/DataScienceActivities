@@ -40,3 +40,11 @@ df_cidade = pd.DataFrame(cidades_data)
 # SQL: SELECT nome, idade FROM Usuario
 result = df_usuario[['nome', 'idade']]
 print(result.head())
+
+# SQL: SELECT * FROM Usuario WHERE idade > 35
+result = df_usuario[df_usuario['idade'] > 35]
+print(result.head())
+
+# SQL: SELECT * FROM Usuário Us INNER JOIN Cidade Ci ON Us.pk = Ci.pk
+result = pd.merge(df_usuario, df_cidade, on='pk')
+print(result.head())
