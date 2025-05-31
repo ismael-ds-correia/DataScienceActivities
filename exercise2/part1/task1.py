@@ -159,3 +159,7 @@ union_all_result = pd.concat([
     df_cidade[['id', 'nome']]
 ])
 print(union_all_result.head())
+
+# SQL: SELECT nome AS nome_usuario FROM Usuario
+result = df_usuario['nome'].rename('nome_usuario')
+print(result.head())
