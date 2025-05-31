@@ -110,3 +110,8 @@ print(result.head())
 df_usuario['categoria'] = df_usuario['idade'].apply(lambda x: 'ADULTO' if x > 18 else 'ADOLESCENTE')
 result = df_usuario[['id', 'nome', 'idade', 'categoria']]
 print(result.head())
+
+# SQL: SELECT estado, COUNT(*) FROM Cidade GROUP BY estado HAVING COUNT(*) > 1
+estado_counts = df_cidade.groupby('estado').size().reset_index(name='contagem')
+result = estado_counts[estado_counts['contagem'] > 1]
+print(result)
