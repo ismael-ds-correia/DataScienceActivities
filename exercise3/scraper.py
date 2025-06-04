@@ -1,76 +1,164 @@
 import asyncio
 import json
-import os
+import time
 from pathlib import Path
 from playwright.async_api import async_playwright
 
-async def fetch_performance_with_playwright(team_id, team_slug, output_path):
-    """
-    1. Abre um browser headless
-    2. Monitora as requisições de rede até encontrar /performance
-    3. Extrai o JSON da resposta e salva em arquivo
-    """
-    async with async_playwright() as pw:
-        browser = await pw.chromium.launch(headless=True)
-        context = await browser.new_context(
-            user_agent=(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/134.0.0.0 Safari/537.36"
-            )
-        )
-        page = await context.new_page()
-        performance_data = None
+TOURNAMENT_ID = 34  # Ligue 1
+SEASON_ID = 61736   # 2024/25
+BASE_URL = "https://www.sofascore.com"
+OUTPUT_FILE = "psg_ligue1_24_25.json"
 
-        # Registra um callback para cada resposta de rede:
-        async def handle_response(response):
-            url = response.url
-            if f"/api/v1/team/{team_id}/performance" in url:
-                try:
-                    performance_data_raw = await response.json()
-                    # Pode vir em duas chamadas: sem e com ?_=
-                    performance_data = performance_data_raw
-                    # Salvamos imediatamente (mas ainda queremos fechar a página depois)
-                    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-                    with open(output_path, "w", encoding="utf-8") as f:
-                        json.dump(performance_data, f, ensure_ascii=False, indent=4)
-                    print(f"✓ JSON salvo em: {output_path}")
-                except Exception as e:
-                    print(f"✗ Erro ao ler JSON da resposta: {e}")
+async def get_rounds(page):
+    """Obtém todas as rodadas da temporada"""
+    url = f"{BASE_URL}/api/v1/unique-tournament/{TOURNAMENT_ID}/season/{SEASON_ID}/rounds"
+    await page.goto(f"{BASE_URL}/pt/torneio/futebol/france/ligue-1/{TOURNAMENT_ID}")
+    await page.wait_for_timeout(1000)
+    
+    response_text = await page.evaluate(f"""
+        async () => {{
+            const response = await fetch("{url}");
+            return await response.text();
+        }}
+    """)
+    
+    data = json.loads(response_text)
+    print("Chaves na resposta da API:", list(data.keys()))
+    
+    # Adaptação para diferentes estruturas de resposta
+    if 'rounds' in data:
+        rounds_data = data['rounds']
+    elif 'uniqueTournamentSeasonRounds' in data:
+        rounds_data = data['uniqueTournamentSeasonRounds']['rounds']
+    else:
+        print("Estrutura da API mudou!")
+        with open("api_debug_rounds.json", "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        print("Resposta da API salva em api_debug_rounds.json para análise")
+        return []
+        
+    # Filtra rodadas válidas (ignora qualificações e finais)
+    rounds = [r['round'] for r in rounds_data 
+              if isinstance(r.get('round'), int) and r['round'] <= 34]
+    return sorted(set(rounds))
 
-        page.on("response", handle_response)
+async def get_events_for_round(page, round_number):
+    """Obtém todos os jogos de uma rodada"""
+    url = f"{BASE_URL}/api/v1/unique-tournament/{TOURNAMENT_ID}/season/{SEASON_ID}/events/round/{round_number}"
+    
+    response_text = await page.evaluate(f"""
+        async () => {{
+            const response = await fetch("{url}");
+            return await response.text();
+        }}
+    """)
+    
+    data = json.loads(response_text)
+    return data.get('events', [])
 
-        # Acesse a página do time para que ela dispare a chamada /performance
-        team_url = f"https://www.sofascore.com/pt/time/futebol/{team_slug}/{team_id}"
-        await page.goto(team_url)
-        # Aguardar um pouco (ou até a resposta ser capturada)
-        await page.wait_for_timeout(5000)  # 5 segundos
-
-        await browser.close()
+async def get_statistics_for_event(page, event_id):
+    """Obtém estatísticas de um jogo específico"""
+    url = f"{BASE_URL}/api/v1/event/{event_id}/statistics"
+    
+    try:
+        response_text = await page.evaluate(f"""
+            async () => {{
+                const response = await fetch("{url}");
+                return await response.text();
+            }}
+        """)
+        
+        data = json.loads(response_text)
+        return data
+    except Exception as e:
+        print(f"  ⚠️ Erro ao obter estatísticas (ID {event_id}): {e}")
+        return None
 
 async def main():
-    base_dir = Path("json/performance")
-    os.makedirs(base_dir, exist_ok=True)
-
-    teams = {
-        "lyon": {
-            "team_id": 1649,
-            "slug": "olympique-lyonnais",
-            "filename": "lyon-performance.json"
-        },
-        "psg": {
-            "team_id": 1644,
-            "slug": "paris-saint-germain",
-            "filename": "psg-performance.json"
-        }
-    }
-
-    for team_name, info in teams.items():
-        team_id = info["team_id"]
-        slug = info["slug"]
-        output_path = base_dir / info["filename"]
-        print(f"\n📥 Baixando performance do {team_name.upper()} (ID={team_id})…")
-        await fetch_performance_with_playwright(team_id, slug, str(output_path))
+    all_stats = []
+    
+    async with async_playwright() as p:
+        # Inicia o navegador
+        browser = await p.chromium.launch(headless=True)
+        context = await browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+        )
+        page = await context.new_page()
+        
+        # Obtém rodadas
+        print("📋 Obtendo rodadas da Ligue 1 24/25...")
+        rounds = await get_rounds(page)
+        
+        if not rounds:
+            print("❌ Não foi possível obter as rodadas.")
+            await browser.close()
+            return
+            
+        print(f"✅ Rodadas encontradas: {rounds}")
+        
+        # Itera por cada rodada
+        for round_number in rounds:
+            print(f"\n🔍 Buscando jogos da rodada {round_number}...")
+            events = await get_events_for_round(page, round_number)
+            
+            if not events:
+                print(f"⚠️ Nenhum jogo encontrado na rodada {round_number}")
+                continue
+                
+            # Filtra apenas jogos do PSG
+            psg_events = [e for e in events 
+                         if e['homeTeam']['name'] == "Paris Saint-Germain" 
+                         or e['awayTeam']['name'] == "Paris Saint-Germain"]
+            
+            if not psg_events:
+                print(f"ℹ️ Nenhum jogo do PSG na rodada {round_number}")
+                continue
+            
+            print(f"📊 Encontrado(s) {len(psg_events)} jogo(s) do PSG na rodada {round_number}")
+            
+            # Coleta estatísticas de cada jogo do PSG
+            for event in psg_events:
+                event_id = event['id']
+                home = event['homeTeam']['name']
+                away = event['awayTeam']['name']
+                
+                # Adiciona informações básicas do jogo
+                match_data = {
+                    "event_id": event_id,
+                    "home": home,
+                    "away": away,
+                    "round": round_number,
+                    "date": event.get('startTimestamp'),
+                    "status": event.get('status', {}).get('description', 'Agendado')
+                }
+                
+                # Verifica se o jogo já aconteceu ou está em andamento
+                if event.get('status', {}).get('type') in ['finished', 'inprogress']:
+                    print(f"  📈 Coletando estatísticas: {home} vs {away} (ID: {event_id})...")
+                    stats = await get_statistics_for_event(page, event_id)
+                    
+                    if stats:
+                        match_data["statistics"] = stats
+                        print(f"  ✅ Estatísticas coletadas com sucesso")
+                    else:
+                        print(f"  ⚠️ Sem estatísticas disponíveis")
+                else:
+                    print(f"  ⏳ Jogo agendado (sem estatísticas): {home} vs {away}")
+                
+                all_stats.append(match_data)
+                await page.wait_for_timeout(1000)  # Pausa para evitar bloqueio
+        
+        await browser.close()
+    
+    # Salva os dados coletados
+    if all_stats:
+        Path(OUTPUT_FILE).parent.mkdir(exist_ok=True)
+        with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+            json.dump(all_stats, f, ensure_ascii=False, indent=2)
+        print(f"\n🎉 Coleta finalizada! {len(all_stats)} jogos do PSG salvos em {OUTPUT_FILE}")
+    else:
+        print("\n❌ Nenhum dado coletado.")
 
 if __name__ == "__main__":
+    # Windows requer este ajuste para asyncio
     asyncio.run(main())
