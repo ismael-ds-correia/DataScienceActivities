@@ -4,15 +4,10 @@ import time
 from pathlib import Path
 from playwright.async_api import async_playwright
 
-TOURNAMENT_ID = 34  # Ligue 1
-SEASON_ID = 61736   # 2024/25
-BASE_URL = "https://www.sofascore.com"
-OUTPUT_FILE = "psg_ligue1_24_25.json"
-
-async def get_rounds(page):
+async def get_rounds(page, base_url, tournament_id, season_id):
     """Obtém todas as rodadas da temporada"""
-    url = f"{BASE_URL}/api/v1/unique-tournament/{TOURNAMENT_ID}/season/{SEASON_ID}/rounds"
-    await page.goto(f"{BASE_URL}/pt/torneio/futebol/france/ligue-1/{TOURNAMENT_ID}")
+    url = f"{base_url}/api/v1/unique-tournament/{tournament_id}/season/{season_id}/rounds"
+    await page.goto(f"{base_url}/pt/torneio/futebol/france/ligue-1/{tournament_id}")
     await page.wait_for_timeout(1000)
     
     response_text = await page.evaluate(f"""
@@ -42,9 +37,9 @@ async def get_rounds(page):
               if isinstance(r.get('round'), int) and r['round'] <= 34]
     return sorted(set(rounds))
 
-async def get_events_for_round(page, round_number):
+async def get_events_for_round(page, base_url, tournament_id, season_id, round_number):
     """Obtém todos os jogos de uma rodada"""
-    url = f"{BASE_URL}/api/v1/unique-tournament/{TOURNAMENT_ID}/season/{SEASON_ID}/events/round/{round_number}"
+    url = f"{base_url}/api/v1/unique-tournament/{tournament_id}/season/{season_id}/events/round/{round_number}"
     
     response_text = await page.evaluate(f"""
         async () => {{
@@ -56,9 +51,9 @@ async def get_events_for_round(page, round_number):
     data = json.loads(response_text)
     return data.get('events', [])
 
-async def get_statistics_for_event(page, event_id):
+async def get_statistics_for_event(page, base_url, event_id):
     """Obtém estatísticas de um jogo específico"""
-    url = f"{BASE_URL}/api/v1/event/{event_id}/statistics"
+    url = f"{base_url}/api/v1/event/{event_id}/statistics"
     
     try:
         response_text = await page.evaluate(f"""
@@ -74,7 +69,12 @@ async def get_statistics_for_event(page, event_id):
         print(f"  ⚠️ Erro ao obter estatísticas (ID {event_id}): {e}")
         return None
 
-async def main():
+async def scrape_team_data(team_name, tournament_id, season_id, output_file=None, base_url="https://www.sofascore.com"):
+    """Coleta todos os jogos de um time em uma liga específica"""
+    if output_file is None:
+        team_slug = team_name.replace(" ", "_").lower()
+        output_file = f"{team_slug}_{tournament_id}_{season_id}.json"
+    
     all_stats = []
     
     async with async_playwright() as p:
@@ -86,8 +86,8 @@ async def main():
         page = await context.new_page()
         
         # Obtém rodadas
-        print("📋 Obtendo rodadas da Ligue 1 24/25...")
-        rounds = await get_rounds(page)
+        print(f"📋 Obtendo rodadas do torneio {tournament_id}...")
+        rounds = await get_rounds(page, base_url, tournament_id, season_id)
         
         if not rounds:
             print("❌ Não foi possível obter as rodadas.")
@@ -99,25 +99,25 @@ async def main():
         # Itera por cada rodada
         for round_number in rounds:
             print(f"\n🔍 Buscando jogos da rodada {round_number}...")
-            events = await get_events_for_round(page, round_number)
+            events = await get_events_for_round(page, base_url, tournament_id, season_id, round_number)
             
             if not events:
                 print(f"⚠️ Nenhum jogo encontrado na rodada {round_number}")
                 continue
                 
-            # Filtra apenas jogos do PSG
-            psg_events = [e for e in events 
-                         if e['homeTeam']['name'] == "Paris Saint-Germain" 
-                         or e['awayTeam']['name'] == "Paris Saint-Germain"]
+            # Filtra apenas jogos do time especificado
+            team_events = [e for e in events 
+                           if e['homeTeam']['name'] == team_name 
+                           or e['awayTeam']['name'] == team_name]
             
-            if not psg_events:
-                print(f"ℹ️ Nenhum jogo do PSG na rodada {round_number}")
+            if not team_events:
+                print(f"ℹ️ Nenhum jogo do {team_name} na rodada {round_number}")
                 continue
             
-            print(f"📊 Encontrado(s) {len(psg_events)} jogo(s) do PSG na rodada {round_number}")
+            print(f"📊 Encontrado(s) {len(team_events)} jogo(s) do {team_name} na rodada {round_number}")
             
-            # Coleta estatísticas de cada jogo do PSG
-            for event in psg_events:
+            # Coleta estatísticas de cada jogo do time
+            for event in team_events:
                 event_id = event['id']
                 home = event['homeTeam']['name']
                 away = event['awayTeam']['name']
@@ -135,7 +135,7 @@ async def main():
                 # Verifica se o jogo já aconteceu ou está em andamento
                 if event.get('status', {}).get('type') in ['finished', 'inprogress']:
                     print(f"  📈 Coletando estatísticas: {home} vs {away} (ID: {event_id})...")
-                    stats = await get_statistics_for_event(page, event_id)
+                    stats = await get_statistics_for_event(page, base_url, event_id)
                     
                     if stats:
                         match_data["statistics"] = stats
@@ -152,13 +152,26 @@ async def main():
     
     # Salva os dados coletados
     if all_stats:
-        Path(OUTPUT_FILE).parent.mkdir(exist_ok=True)
-        with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+        Path(output_file).parent.mkdir(exist_ok=True)
+        with open(output_file, "w", encoding="utf-8") as f:
             json.dump(all_stats, f, ensure_ascii=False, indent=2)
-        print(f"\n🎉 Coleta finalizada! {len(all_stats)} jogos do PSG salvos em {OUTPUT_FILE}")
+        print(f"\n🎉 Coleta finalizada! {len(all_stats)} jogos do {team_name} salvos em {output_file}")
     else:
         print("\n❌ Nenhum dado coletado.")
 
+async def main():
+    # Array de times para scraping - cada item é uma tupla (time, torneio, temporada)
+    teams_to_scrape = [
+        ("Paris Saint-Germain", 34, 61736),  # PSG na Ligue 1 2024/25
+        ("Olympique Lyonnais", 34, 61736)    # Lyon na Ligue 1 2024/25
+    ]
+
+    # Executa o scraping para cada time na lista
+    for team_name, tournament_id, season_id in teams_to_scrape:
+        print(f"\n==== Iniciando coleta para: {team_name} ====")
+        await scrape_team_data(team_name, tournament_id, season_id)
+        print(f"==== Coleta finalizada para: {team_name} ====\n")
+    
+
 if __name__ == "__main__":
-    # Windows requer este ajuste para asyncio
     asyncio.run(main())
