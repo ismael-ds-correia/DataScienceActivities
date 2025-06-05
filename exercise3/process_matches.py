@@ -24,6 +24,14 @@ def extract_match_stats(match_data):
         "status": match_data["status"]
     }
     
+    # Extrair o placar
+    if "homeScore" in match_data and "awayScore" in match_data:
+        match_info["home_goals"] = match_data["homeScore"].get("current", 0)
+        match_info["away_goals"] = match_data["awayScore"].get("current", 0)
+    else:
+        match_info["home_goals"] = 0
+        match_info["away_goals"] = 0
+    
     # Inicializa dicionário para estatísticas
     home_stats = {}
     away_stats = {}
@@ -109,11 +117,15 @@ for json_file in Path(raw_data_folder).glob("*.json"):
                 opponent = match_info["away_team"]
                 team_stats = home_stats
                 opponent_stats = away_stats
+                goals_for = match_info["home_goals"]
+                goals_against = match_info["away_goals"]
             else:
                 team_role = "away"
                 opponent = match_info["home_team"]
                 team_stats = away_stats
                 opponent_stats = home_stats
+                goals_for = match_info["away_goals"]
+                goals_against = match_info["home_goals"]
             
             # Cria um registro para esta partida
             match_record = {
@@ -123,6 +135,10 @@ for json_file in Path(raw_data_folder).glob("*.json"):
                 "round": match_info["round"],
                 "date": match_info["date"],
                 "status": match_info["status"],
+                
+                # Placar da partida
+                "goals_for": goals_for,
+                "goals_against": goals_against,
                 
                 # Estatísticas do time
                 "total_shots": team_stats["totalShotsOnGoal"],

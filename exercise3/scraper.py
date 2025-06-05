@@ -132,6 +132,14 @@ async def scrape_team_data(team_name, tournament_id, season_id, output_file=None
                     "status": event.get('status', {}).get('description', 'Agendado')
                 }
                 
+                # Adiciona placar do jogo (se disponível)
+                if 'homeScore' in event and 'awayScore' in event:
+                    match_data["homeScore"] = event['homeScore']
+                    match_data["awayScore"] = event['awayScore']
+                else:
+                    match_data["homeScore"] = {"current": 0}
+                    match_data["awayScore"] = {"current": 0}
+                
                 # Verifica se o jogo já aconteceu ou está em andamento
                 if event.get('status', {}).get('type') in ['finished', 'inprogress']:
                     print(f"  📈 Coletando estatísticas: {home} vs {away} (ID: {event_id})...")
