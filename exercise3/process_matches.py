@@ -81,14 +81,27 @@ for json_file in Path(raw_data_folder).glob("*.json"):
     with open(json_file, "r", encoding="utf-8") as f:
         team_data = json.load(f)
         
-        team_name = json_file.stem.split("_")[0]  # Extrai nome do time do arquivo
+        # Mapeia nomes dos arquivos para nomes padronizados
+        file_stem = json_file.stem.lower()
+        
+        if "paris" in file_stem:
+            team_name = "PSG"
+            original_team_name = "Paris Saint-Germain"
+        elif "olympique" in file_stem or "lyon" in file_stem:
+            team_name = "Lyon"
+            original_team_name = "Olympique Lyonnais"
+        else:
+            team_name = file_stem.split("_")[0].capitalize()
+            original_team_name = team_name
+        
+        print(f"Processando {json_file.name} -> Time: {team_name}")
         
         # Processa cada partida
         for match in team_data:
             match_info, home_stats, away_stats = extract_match_stats(match)
             
             # Determina se o time focal é mandante ou visitante
-            is_home = match_info["home_team"] == team_name
+            is_home = match_info["home_team"] == original_team_name
             
             # Configura time focal e adversário
             if is_home:
@@ -104,7 +117,7 @@ for json_file in Path(raw_data_folder).glob("*.json"):
             
             # Cria um registro para esta partida
             match_record = {
-                "team": team_name,
+                "team": team_name,  # Agora será "PSG" ou "Lyon"
                 "opponent": opponent,
                 "home_away": team_role,
                 "round": match_info["round"],
@@ -150,7 +163,7 @@ if not df_matches.empty and "date" in df_matches.columns:
 # Salva dados para cada time separadamente
 for team in df_matches["team"].unique():
     team_df = df_matches[df_matches["team"] == team]
-    output_file = f"{processed_data_folder}/{team.lower().replace(' ', '_')}_stats.csv"
+    output_file = f"{processed_data_folder}/{team.lower()}_stats.csv"
     team_df.to_csv(output_file, index=False)
     print(f"Estatísticas de {team} salvas em: {output_file}")
 
